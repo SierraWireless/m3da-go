@@ -38,23 +38,6 @@ The Bysant protocol defines 7 different encoding contexts:
 - **Context 5 (Double)**: 64-bit floating point numbers
 - **Context 6 (Lists & Maps)**: Container objects
 
-### Key Bysant OpCodes
-
-| OpCode | Type | Description |
-|--------|------|-------------|
-| `0x00` | Null | Null value |
-| `0x01` | Boolean | False |
-| `0x02` | Boolean | True |
-| `0x03-0x23` | String | Tiny string (length 0-32) |
-| `0x60` | Envelope | M3DA envelope |
-| `0x61` | Message | M3DA message |
-| `0x62` | Response | M3DA response |
-| `0x63` | DeltasVector | Compressed deltas vector |
-| `0x64` | QuasiPeriodicVector | Compressed periodic data |
-| `0xFD` | Int64 | 64-bit signed integer |
-| `0xFE` | Float32 | 32-bit IEEE 754 float |
-| `0xFF` | Float64 | 64-bit IEEE 754 double |
-
 ## M3DA Envelope Structure
 
 Every M3DA communication is wrapped in an envelope:
@@ -155,13 +138,6 @@ M3DA supports comprehensive security through encryption and authentication.
 - **AES-CTR-128**: 128-bit AES in CTR mode
 - **AES-CTR-256**: 256-bit AES in CTR mode (recommended)
 - **None**: No encryption
-
-### Key Derivation
-
-Keys are derived using PBKDF2 with SHA1:
-- Salt: "M3DA"
-- Iterations: 4096
-- Key material includes cipher key, IV, and HMAC key
 
 ## Status Codes
 
