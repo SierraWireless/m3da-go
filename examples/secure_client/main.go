@@ -1,15 +1,21 @@
-package main
+package secure_client
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"time"
+
+	"github.com/jeffry-luqman/zlog"
 
 	m3da "github.com/SierraWireless/m3da-go"
 )
 
 func main() {
+	zlog.HandlerOptions = &slog.HandlerOptions{Level: slog.LevelDebug}
+	slog.SetDefault(zlog.New())
+
 	fmt.Println("🔐 M3DA Secure Client Example")
 	fmt.Println("=============================")
 

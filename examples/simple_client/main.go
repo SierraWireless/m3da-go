@@ -1,15 +1,20 @@
-package main
+package simple_client
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 
 	m3da "github.com/SierraWireless/m3da-go"
+	"github.com/jeffry-luqman/zlog"
 )
 
 func main() {
+	zlog.HandlerOptions = &slog.HandlerOptions{Level: slog.LevelDebug}
+	slog.SetDefault(zlog.New())
+
 	// Create client with Go name (matching Java test pattern)
 	config := m3da.DefaultClientConfig("localhost", "golang-test-client")
 	client := m3da.NewTCPClient(config)
