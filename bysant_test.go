@@ -103,6 +103,30 @@ func TestBysantRoundTrip_Comprehensive(t *testing.T) {
 			context:       ContextGlobal,
 		},
 		{
+			name:          "simple list in List and map context",
+			input:         []interface{}{int64(1), int64(2), int64(3)},
+			expectedBytes: []byte{0x04, 0xa0, 0xa1, 0xa2},
+			context:       ContextListAndMaps,
+		},
+		{
+			name:          "empty list in List and map context",
+			input:         []interface{}{},
+			expectedBytes: []byte{0x01},
+			context:       ContextListAndMaps,
+		},
+		{
+			name:          "simple map in List and map context",
+			input:         map[string]interface{}{"key": "value"},
+			expectedBytes: []byte{0x84, 0x04, 0x6b, 0x65, 0x79, 0x08, 0x76, 0x61, 0x6c, 0x75, 0x65},
+			context:       ContextListAndMaps,
+		},
+		{
+			name:          "empty map in List and map context",
+			input:         map[string]interface{}{},
+			expectedBytes: []byte{0x83},
+			context:       ContextListAndMaps,
+		},
+		{
 			name:          "combined data",
 			input:         []interface{}{"test string", int64(42), []interface{}{int64(1), int64(2), int64(3)}, map[string]interface{}{"key": "value"}},
 			expectedBytes: []byte{0x2e, 0x0e, 0x74, 0x65, 0x73, 0x74, 0x20, 0x73, 0x74, 0x72, 0x69, 0x6e, 0x67, 0xc9, 0x2d, 0xa0, 0xa1, 0xa2, 0x42, 0x04, 0x6b, 0x65, 0x79, 0x08, 0x76, 0x61, 0x6c, 0x75, 0x65},
