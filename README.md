@@ -253,7 +253,7 @@ See the `examples/` directory for complete working examples:
 
 ## Protocol Documentation
 
-For detailed protocol information, see [M3DA_PROTOCOL_DOCUMENTATION.md](M3DA_PROTOCOL_DOCUMENTATION.md).
+For detailed protocol information, see [M3DA_PROTOCOL_DOCUMENTATION.md](docs/M3DA_PROTOCOL_DOCUMENTATION.md).
 
 ## Testing with Reference Server
 
