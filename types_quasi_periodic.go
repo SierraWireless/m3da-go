@@ -72,12 +72,12 @@ func (q *M3daQuasiPeriodicVector[T]) EncodeTo(encoder *BysantEncoder) error {
 	encoder.buf.WriteByte(q.GetOpCode())
 
 	// Encode period in NUMBERS context (matches Java BysantContext.NUMBERS)
-	if err := encoder.encodeNumberInNumberContext(q.Period); err != nil {
+	if err := encoder.encodeObjectInNumberContext(q.Period); err != nil {
 		return err
 	}
 
 	// Encode start in NUMBERS context (matches Java BysantContext.NUMBERS)
-	if err := encoder.encodeNumberInNumberContext(q.Start); err != nil {
+	if err := encoder.encodeObjectInNumberContext(q.Start); err != nil {
 		return err
 	}
 

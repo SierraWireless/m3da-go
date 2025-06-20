@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"math"
 )
 
 // BysantEncoder handles encoding of M3DA objects to binary format
@@ -40,7 +41,33 @@ func (e *BysantEncoder) EncodeObject(obj interface{}) ([]byte, error) {
 	return e.buf.Bytes(), nil
 }
 
-// encodeObject encodes a single object
+func (e *BysantEncoder) encodeObjectInContext(obj interface{}, ctx EncodingContext) ([]byte, error) {
+	e.buf.Reset()
+	var err error
+
+	switch ctx {
+	case ContextGlobal:
+		err = e.encodeObjectInGlobalContext(obj)
+	case ContextUintsAndStrs:
+		err = e.encodeObjectInUISContext(obj)
+	case ContextNumber:
+		err = e.encodeObjectInNumberContext(obj)
+	case ContextInt32:
+		err = e.encodeObjectInInt32Context(obj)
+	case ContextFloat:
+		err = e.encodeObjectInFloatContext(obj)
+	case ContextDouble:
+		err = e.encodeObjectInDoubleContext(obj)
+	case ContextListAndMaps:
+		err = e.encodeObjectInListAndMapsContext(obj)
+	default:
+		err = fmt.Errorf("unsupported context: %d", ctx)
+	}
+
+	return e.buf.Bytes(), err
+}
+
+// Context 0: Global, allows the definition of nearly any object but is less compact encoding.
 func (e *BysantEncoder) encodeObjectInGlobalContext(obj interface{}) error {
 	switch v := obj.(type) {
 	case nil:
@@ -93,8 +120,27 @@ func (e *BysantEncoder) encodeObjectInGlobalContext(obj interface{}) error {
 	}
 }
 
-// encodeObject encodes a single object
-func (e *BysantEncoder) encodeNumberInNumberContext(obj interface{}) error {
+// Context 1: Unsigned Integers and Strings (UIS), used to encode unsigned numbers and strings. Mainly used for map keys.
+func (e *BysantEncoder) encodeObjectInUISContext(obj interface{}) error {
+	switch v := obj.(type) {
+	case uint:
+		return e.encodeUnsignedIntegerInContext(uint32(v), ContextUintsAndStrs)
+	case uint16:
+		return e.encodeUnsignedIntegerInContext(uint32(v), ContextUintsAndStrs)
+	case uint32:
+		return e.encodeUnsignedIntegerInContext(uint32(v), ContextUintsAndStrs)
+	case string:
+		return e.encodeStringInContext(v, ContextUintsAndStrs)
+	case []byte:
+		return e.encodeBinaryInContext(v, ContextUintsAndStrs)
+
+	default:
+		return fmt.Errorf("unsupported type for uint and str context: %T", obj)
+	}
+}
+
+// Context 2: Numbers, specialized to define numbers efficiently.
+func (e *BysantEncoder) encodeObjectInNumberContext(obj interface{}) error {
 	switch v := obj.(type) {
 	case int:
 		return e.encodeIntegerInContext(int64(v), ContextNumber)
@@ -111,7 +157,72 @@ func (e *BysantEncoder) encodeNumberInNumberContext(obj interface{}) error {
 	case float64:
 		return e.encodeFloat64(v)
 	default:
-		return fmt.Errorf("unsupported type: %T", obj)
+		return fmt.Errorf("unsupported type for number context: %T", obj)
+	}
+}
+
+// Context 3: 4 bytes signed integer only (Int32)
+func (e *BysantEncoder) encodeObjectInInt32Context(obj interface{}) error {
+	const nullToken int32 = -1 << 31 // 0x80000000 = -2147483648
+
+	switch v := obj.(type) {
+	case nil:
+		binary.Write(e.buf, binary.BigEndian, nullToken)
+	case int32:
+		binary.Write(e.buf, binary.BigEndian, v)
+		if v == nullToken {
+			e.buf.WriteByte(0x01)
+		}
+	default:
+		return fmt.Errorf("unsupported type for int32 context: %T", obj)
+	}
+	return nil
+}
+
+// Context 4: 4 bytes floating numbers only (Float)
+func (e *BysantEncoder) encodeObjectInFloatContext(obj interface{}) error {
+	var nullToken float32 = math.Float32frombits(0xFFFFFFFF)
+
+	switch v := obj.(type) {
+	case nil:
+		binary.Write(e.buf, binary.BigEndian, nullToken)
+	case float32:
+		binary.Write(e.buf, binary.BigEndian, v)
+		if v == nullToken {
+			e.buf.WriteByte(0x01)
+		}
+	default:
+		return fmt.Errorf("unsupported type for float32 context: %T", obj)
+	}
+	return nil
+}
+
+// Context 5: 8 bytes floating numbers only (Double/Float64)
+func (e *BysantEncoder) encodeObjectInDoubleContext(obj interface{}) error {
+	var nullToken float64 = math.Float64frombits(0xFFFFFFFFFFFFFFF)
+
+	switch v := obj.(type) {
+	case nil:
+		binary.Write(e.buf, binary.BigEndian, nullToken)
+	case float64:
+		if v == nullToken {
+			e.buf.WriteByte(0x01)
+		}
+	default:
+		return fmt.Errorf("unsupported type for float64 context: %T", obj)
+	}
+	return nil
+}
+
+// Context 6: Lists & Maps
+func (e *BysantEncoder) encodeObjectInListAndMapsContext(obj interface{}) error {
+	switch v := obj.(type) {
+	case []interface{}:
+		return e.encodeListInContext(v, ContextListAndMaps)
+	case map[string]interface{}:
+		return e.encodeMapInContext(v, ContextListAndMaps)
+	default:
+		return fmt.Errorf("unsupported type for list and map context: %T", obj)
 	}
 }
 
@@ -359,14 +470,14 @@ func (e *BysantEncoder) encodeMapInContext(m map[string]interface{}, ctx Encodin
 		return fmt.Errorf("unknown context for map encoding: %d", ctx)
 	}
 
-	if len(m) == 0 {
+	size := len(m)
+	switch {
+	case size == 0:
 		e.buf.WriteByte(emptyOpcode)
 		return nil
-	}
-
-	if len(m) <= smallLimit {
+	case size <= smallLimit:
 		e.buf.WriteByte(smallUntypedOpcode + byte(len(m)) - 1)
-	} else {
+	default:
 		e.buf.WriteByte(knownLenUntypedOpcode)
 		if err := e.encodeUnsignedIntegerInContext(uint32(len(m)-smallLimit-1), ContextUintsAndStrs); err != nil {
 			return err
@@ -429,17 +540,15 @@ func (e *BysantEncoder) encodeListInContext(list []interface{}, ctx EncodingCont
 	}
 
 	size := len(list)
-
-	if size == 0 {
+	switch {
+	case size == 0:
 		// Empty list opcodes by context
 		e.buf.WriteByte(emptyOpcode)
-	}
-
-	// Encode list size and opcode
-	if size <= smallLimit {
+		return nil
+	case size <= smallLimit:
 		// Small untyped list: opcode include size
 		e.buf.WriteByte(byte(int(smallUntypedOpcode) + size - 1))
-	} else {
+	default:
 		// Large untyped list: opcodefollowed by size
 		e.buf.WriteByte(knownLenUntypedOpcode)
 		if err := e.encodeUnsignedIntegerInContext(uint32(size-smallLimit-1), ContextUintsAndStrs); err != nil {

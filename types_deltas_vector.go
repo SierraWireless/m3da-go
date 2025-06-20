@@ -48,12 +48,12 @@ func (d *M3daDeltasVector[T]) EncodeTo(encoder *BysantEncoder) error {
 	encoder.buf.WriteByte(d.GetOpCode())
 
 	// Encode factor in NUMBERS context (matches Java BysantContext.NUMBERS)
-	if err := encoder.encodeNumberInNumberContext(d.Factor); err != nil {
+	if err := encoder.encodeObjectInNumberContext(d.Factor); err != nil {
 		return err
 	}
 
 	// Encode start in NUMBERS context (matches Java BysantContext.NUMBERS)
-	if err := encoder.encodeNumberInNumberContext(d.Start); err != nil {
+	if err := encoder.encodeObjectInNumberContext(d.Start); err != nil {
 		return err
 	}
 
