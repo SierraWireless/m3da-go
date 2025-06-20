@@ -160,15 +160,16 @@ func (e *BysantEncoder) encodeStringInContext(s string, ctx EncodingContext) err
 		return fmt.Errorf("unknown context for string encoding: %d", ctx)
 	}
 
-	if length <= smallLimit {
+	switch {
+	case length <= smallLimit:
 		// Tiny/small string
 		e.buf.WriteByte(smallOpcode + byte(length))
-	} else if length <= mediumLimit {
+	case length <= mediumLimit:
 		// Medium string
 		sentLen := length - (smallLimit + 1)
 		e.buf.WriteByte(mediumOpcode + byte(sentLen>>8))
 		e.buf.WriteByte(byte(sentLen & 0xFF))
-	} else {
+	default:
 		// Large/chunked strings not implemented for simplicity
 		return fmt.Errorf("string too large: %d bytes", length)
 	}
@@ -279,28 +280,29 @@ func (e *BysantEncoder) encodeUnsignedIntegerInContext(n uint32, ctx EncodingCon
 	}
 
 	// From C implementation: writeUnsignedInteger
-	if n <= 139 { // BS_UTI_MAX
+	switch {
+	case n <= 139: // BS_UTI_MAX
 		e.buf.WriteByte(byte(n + 0x3b))
 		return nil
-	} else if n <= 8331 { // BS_USI_MAX
+	case n <= 8331: // BS_USI_MAX
 		offset := n - 140
 		e.buf.WriteByte(byte(0xc7 + (offset >> 8)))
 		e.buf.WriteByte(byte(offset & 0xff))
 		return nil
-	} else if n <= 1056907 { // BS_UMI_MAX
+	case n <= 1056907: // BS_UMI_MAX
 		offset := n - 8332
 		e.buf.WriteByte(byte(0xe7 + (offset >> 16)))
 		e.buf.WriteByte(byte((offset >> 8) & 0xff))
 		e.buf.WriteByte(byte(offset & 0xff))
 		return nil
-	} else if n <= 135274635 { // BS_ULI_MAX
+	case n <= 135274635: // BS_ULI_MAX
 		offset := n - 1056908
 		e.buf.WriteByte(byte(0xf7 + (offset >> 24)))
 		e.buf.WriteByte(byte((offset >> 16) & 0xff))
 		e.buf.WriteByte(byte((offset >> 8) & 0xff))
 		e.buf.WriteByte(byte(offset & 0xff))
 		return nil
-	} else {
+	default:
 		e.buf.WriteByte(0xff)
 		return binary.Write(e.buf, binary.BigEndian, n)
 	}
@@ -324,14 +326,14 @@ func (e *BysantEncoder) encodeMapInContext(m map[string]interface{}, ctx Encodin
 	var smallLimit int
 	var smallUntypedOpcode byte
 	// FIXME: not implemented
-	//var smallTypedOpcode byte
+	// var smallTypedOpcode byte
 	var knownLenUntypedOpcode byte
 	// FIXME: not implemented
-	//var knownLenTypedOpcode byte
+	// var knownLenTypedOpcode byte
 	// null terminated maps
 	// FIXME: not implemented
-	//var UnknownLenUntypedOpcode byte
-	//var UnknownLenTypedOpcode byte
+	// var UnknownLenUntypedOpcode byte
+	// var UnknownLenTypedOpcode byte
 
 	switch ctx {
 	case ContextGlobal:
@@ -339,20 +341,20 @@ func (e *BysantEncoder) encodeMapInContext(m map[string]interface{}, ctx Encodin
 		emptyOpcode = 0x41
 		smallLimit = 9
 		smallUntypedOpcode = 0x42
-		//smallTypedOpcode = 0x4D
+		// smallTypedOpcode = 0x4D
 		knownLenUntypedOpcode = 0x4B
-		//knownLenTypedOpcode = 0x56
-		//UnknownLenUntypedOpcode = 0x4C
-		//UnknownLenTypedOpcode = 0x57
+		// knownLenTypedOpcode = 0x56
+		// UnknownLenUntypedOpcode = 0x4C
+		// UnknownLenTypedOpcode = 0x57
 	case ContextListAndMaps:
 		emptyOpcode = 0x83
 		smallLimit = 60
 		smallUntypedOpcode = 0x84
-		//smallTypedOpcode = 0xC2
+		// smallTypedOpcode = 0xC2
 		knownLenUntypedOpcode = 0xC0
-		//knownLenTypedOpcode = 0xFE
-		//UnknownLenUntypedOpcode = 0xC1
-		//UnknownLenTypedOpcode = 0xFF
+		// knownLenTypedOpcode = 0xFE
+		// UnknownLenUntypedOpcode = 0xC1
+		// UnknownLenTypedOpcode = 0xFF
 	default:
 		return fmt.Errorf("unknown context for map encoding: %d", ctx)
 	}
@@ -393,14 +395,14 @@ func (e *BysantEncoder) encodeListInContext(list []interface{}, ctx EncodingCont
 	var smallLimit int
 	var smallUntypedOpcode byte
 	// FIXME: not implemented
-	//var smallTypedOpcode byte
+	// var smallTypedOpcode byte
 	var knownLenUntypedOpcode byte
 	// FIXME: not implemented
-	//var knownLenTypedOpcode byte
+	// var knownLenTypedOpcode byte
 	// null terminated maps
 	// FIXME: not implemented
-	//var UnknownLenUntypedOpcode byte
-	//var UnknownLenTypedOpcode byte
+	// var UnknownLenUntypedOpcode byte
+	// var UnknownLenTypedOpcode byte
 
 	switch ctx {
 	case ContextGlobal:
@@ -408,20 +410,20 @@ func (e *BysantEncoder) encodeListInContext(list []interface{}, ctx EncodingCont
 		emptyOpcode = 0x2A
 		smallLimit = 9
 		smallUntypedOpcode = 0x2B
-		//smallTypedOpcode = 0x36
+		// smallTypedOpcode = 0x36
 		knownLenUntypedOpcode = 0x34
-		//knownLenTypedOpcode = 0x3F
-		//UnknownLenUntypedOpcode = 0x35
-		//UnknownLenTypedOpcode = 0x40
+		// knownLenTypedOpcode = 0x3F
+		// UnknownLenUntypedOpcode = 0x35
+		// UnknownLenTypedOpcode = 0x40
 	case ContextListAndMaps:
 		emptyOpcode = 0x01
 		smallLimit = 60
 		smallUntypedOpcode = 0x02
-		//smallTypedOpcode = 0x40
+		// smallTypedOpcode = 0x40
 		knownLenUntypedOpcode = 0x3E
-		//knownLenTypedOpcode = 0x7C
-		//UnknownLenUntypedOpcode = 0x3F
-		//UnknownLenTypedOpcode = 0x7D
+		// knownLenTypedOpcode = 0x7C
+		// UnknownLenUntypedOpcode = 0x3F
+		// UnknownLenTypedOpcode = 0x7D
 	default:
 		return fmt.Errorf("unknown context for list encoding: %d", ctx)
 	}
