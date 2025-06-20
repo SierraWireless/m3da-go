@@ -106,14 +106,15 @@ func (sm *securityManager) deriveCipherKey(keyLength int, clientID string) ([]by
 		return nil, fmt.Errorf("current nonce is required for cipher key derivation")
 	}
 
+	/* Theorical Key generation:
 	// Derive Password key K = H_MD5(password)
-	//Kmd5 := md5.Sum([]byte(sm.config.Password))
+	Kmd5 := md5.Sum([]byte(sm.config.Password))
 
 	// Derive base cipher key Kc = H_MD5( clientID o K)
-	//credential := append([]byte(clientID), Kmd5[:]...)
-	//Kc := md5.Sum([]byte(credential))
-
-	// Niether Test server not Airvantage do concat the clientID
+	credential := append([]byte(clientID), Kmd5[:]...)
+	Kc := md5.Sum([]byte(credential))
+	*/
+	// Neither Test server not Airvantage do concat the clientID
 	Kc := md5.Sum([]byte(sm.config.Password))
 
 	h := hmac.New(md5.New, Kc[:])
@@ -238,7 +239,7 @@ func (sm *securityManager) calculateHMAC(envelope *M3daEnvelope, salt []byte) ([
 		// If no ID in envelope and we have a fallback ID, use it
 		if len(sm.config.ServerID) > 0 {
 			clientID = sm.config.ServerID
-			//fmt.Printf("🔍 Using fallback ID for HMAC calculation: %s\n", clientID)
+			warnf("🔍 Using fallback ID for HMAC calculation: %s", clientID)
 		} else {
 			return nil, fmt.Errorf("no entity ID found in envelope header and no fallback ID provided")
 		}
@@ -440,7 +441,7 @@ func (sm *securityManager) verifyEnvelopeSecurity(envelope *M3daEnvelope) error 
 			// Look for envelope in decoded messages
 			for _, msg := range messages {
 				if innerEnvelope, ok := msg.(*M3daEnvelope); ok {
-					//fmt.Printf("🔍 Successfully extracted inner envelope from nested structure\n")
+					infof("🔍 Successfully extracted inner envelope from nested structure")
 					// Replace the outer envelope with the inner envelope contents
 					*envelope = *innerEnvelope
 					break

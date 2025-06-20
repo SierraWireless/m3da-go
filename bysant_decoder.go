@@ -285,7 +285,7 @@ func (d *BysantDecoder) decodeListAndMapsObject(opcode byte) (interface{}, error
 			return nil, fmt.Errorf("invalid map size type")
 		}
 		return d.decodeMapInContext(int(sizeVal), ContextGlobal)
-	//case opcode == 0xC1: // null terminated map pairs
+	// case opcode == 0xC1: // null terminated map pairs
 	default:
 		return nil, fmt.Errorf("unknown LIST_AND_MAPS opcode: 0x%02X", opcode)
 	}

@@ -215,8 +215,6 @@ func TestBysantDecoder_M3DATypes(t *testing.T) {
 			t.Fatalf("Encode error = %v", err)
 		}
 
-		//printHexDump(encoded, fmt.Sprintf("Binary dump for M3DA Message"))
-
 		// Decode
 		decoder := NewBysantDecoder(bytes.NewReader(encoded))
 		decoded, err := decoder.decodeObjectInContext(ContextGlobal)
@@ -356,8 +354,6 @@ func TestBysantEncodeDecode_RoundTrip(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Decode error = %v", err)
 			}
-
-			//printHexDump(encoded, fmt.Sprintf("Binary dump for %s", tc.name))
 
 			// Compare results
 			compareObjects(t, tc.name, decoded, tc.input)
@@ -589,7 +585,6 @@ func TestBysantEncodeDecode_Integration(t *testing.T) {
 			}
 
 			t.Logf("Encoded %s: %d bytes", tc.name, len(encoded))
-			//printHexDump(encoded, fmt.Sprintf("Bytes for %s", tc.name))
 
 			// Decode
 			decoder := NewBysantDecoder(bytes.NewReader(encoded))
