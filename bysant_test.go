@@ -632,10 +632,8 @@ func compareObjects(t *testing.T, name string, actual, expected interface{}) boo
 			if actualVal, exists := actualMap[k]; !exists {
 				t.Errorf("%s: missing key %s", name, k)
 				result = false
-			} else {
-				if !compareObjects(t, name+"."+k, actualVal, v) {
-					result = false
-				}
+			} else if !compareObjects(t, name+"."+k, actualVal, v) {
+				result = false
 			}
 		}
 	case []interface{}:
