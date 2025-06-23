@@ -46,16 +46,9 @@ M3DA Go client now supports comprehensive security features:
 - **None**: No encryption
 
 ### Key Features
-- **PBKDF2 Key Derivation**: Secure key derivation from passwords
 - **Cryptographic Nonces**: Automatic nonce generation for replay protection
 - **Envelope Integrity**: HMAC protection of entire message envelope
 - **Payload Encryption**: AES encryption of message payloads
-
-## Installation
-
-```bash
-go get github.com/m3da/go-client
-```
 
 ## Quick Start
 
@@ -67,7 +60,7 @@ import (
     "fmt"
     "log"
 
-    m3da "github.com/m3da/go-client"
+    m3da "github.com/SierraWireless/m3da-go"
 )
 
 func main() {
@@ -135,15 +128,6 @@ client := m3da.NewTCPClient(config)
 // All communication is now encrypted and authenticated
 err := client.SendData(ctx, "@sys.secure.telemetry", data)
 ```
-
-### Security Levels
-
-| Level | Authentication | Encryption | Use Case |
-|-------|---------------|------------|----------|
-| **None** | None | None | Development/testing |
-| **Basic** | HMAC-SHA1 | None | Message integrity only |
-| **Standard** | HMAC-SHA1 | AES-CTR-128 | General secure communication |
-| **High** | HMAC-SHA1 | AES-CTR-256 | High-security environments |
 
 ## API Reference
 
@@ -269,13 +253,16 @@ See the `examples/` directory for complete working examples:
 
 ## Protocol Documentation
 
-For detailed protocol information, see [M3DA_PROTOCOL_DOCUMENTATION.md](M3DA_PROTOCOL_DOCUMENTATION.md).
+For detailed protocol information, see [M3DA_PROTOCOL_DOCUMENTATION.md](docs/M3DA_PROTOCOL_DOCUMENTATION.md).
 
 ## Testing with Reference Server
 
 Start the Java reference server:
 
 ```bash
+git clone github.com/SierraWireless/m3da-server
+cd m3da-server
+mvn clean install
 cd server
 mvn assembly:assembly -DdescriptorId=jar-with-dependencies
 java -jar target/m3da-server-1.0-SNAPSHOT-jar-with-dependencies.jar
@@ -288,8 +275,7 @@ The server will listen on:
 Then run the Go client examples:
 
 ```bash
-cd examples/basic_client
-go run main.go
+go run examples/basic_client/main.go
 ```
 
 ## REST API Integration
@@ -348,5 +334,3 @@ This project is licensed under the Eclipse Public License v1.0 - see the [LICENS
 ## Acknowledgments
 
 This implementation is based on reverse engineering of the Eclipse Mihini M3DA Java reference implementation. Special thanks to the Sierra Wireless and Eclipse Mihini teams for creating the original protocol and reference implementation.
-
-# m3da-go
