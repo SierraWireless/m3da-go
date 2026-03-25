@@ -51,8 +51,8 @@ func decodeResponse(decoder *BysantDecoder) (M3daEncodable, error) {
 		return nil, fmt.Errorf("invalid ticket ID type: got %T", ticketObj)
 	}
 
-	// Decode status (in GLOBAL context)
-	statusObj, err := decoder.decodeObjectInContext(ContextGlobal)
+	// Decode status (in Number context)
+	statusObj, err := decoder.decodeObjectInContext(ContextNumber)
 	if err != nil {
 		return nil, err
 	}
