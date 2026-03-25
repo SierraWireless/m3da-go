@@ -57,7 +57,7 @@ func decodeMessage(decoder *BysantDecoder) (M3daEncodable, error) {
 		return nil, fmt.Errorf("expected string path, got %T", pathObj)
 	}
 
-	// Decode ticket ID (in UINTS_AND_STRS context, can be null or int64)
+	// Decode ticket ID (in UINTS_AND_STRS context, can be null or uint32)
 	ticketObj, err := decoder.decodeObjectInContext(ContextUintsAndStrs)
 	if err != nil {
 		return nil, err
