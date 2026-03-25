@@ -30,12 +30,12 @@ func (r *M3daResponse) EncodeTo(encoder *BysantEncoder) error {
 	}
 
 	// Encode status
-	if err := encoder.encodeIntegerInContext(r.Status, ContextGlobal); err != nil {
+	if err := encoder.encodeIntegerInContext(r.Status, ContextNumber); err != nil {
 		return err
 	}
 
 	// Encode message
-	return encoder.encodeString(r.Message)
+	return encoder.encodeString(r.Message, ContextUintsAndStrs)
 }
 
 // DecodeResponse decodes an M3DA response from the decoder
