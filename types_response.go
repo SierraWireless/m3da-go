@@ -35,7 +35,7 @@ func (r *M3daResponse) EncodeTo(encoder *BysantEncoder) error {
 	}
 
 	// Encode message
-	return encoder.encodeString(r.Message, ContextUintsAndStrs)
+	return encoder.encodeStringInContext(r.Message, ContextUintsAndStrs)
 }
 
 // DecodeResponse decodes an M3DA response from the decoder

@@ -75,7 +75,7 @@ func (e *BysantEncoder) encodeObjectInGlobalContext(obj interface{}) error {
 	case bool:
 		return e.encodeBool(v)
 	case string:
-		return e.encodeString(v, ContextGlobal)
+		return e.encodeStringInContext(v, ContextGlobal)
 	case int:
 		return e.encodeIntegerInContext(int64(v), ContextGlobal)
 	case int32:
@@ -240,8 +240,9 @@ func (e *BysantEncoder) encodeBool(b bool) error {
 	return nil
 }
 
-func (e *BysantEncoder) encodeString(s string, ctx EncodingContext) error {
-	return e.encodeStringInContext(s, ctx)
+func (e *BysantEncoder) encodeString(s string) error {
+	// Use GLOBAL context by default (can be overridden by encodeStringInContext)
+	return e.encodeStringInContext(s, ContextGlobal)
 }
 
 func (e *BysantEncoder) encodeStringInContext(s string, ctx EncodingContext) error {
