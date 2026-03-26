@@ -199,7 +199,7 @@ func (d *BysantDecoder) decodeUintsAndStrsObject(opcode byte) (interface{}, erro
 	case opcode == 0xFF: // Very large unsigned integer (> 135274635)
 		var n uint32
 		err := binary.Read(d.reader, binary.BigEndian, &n)
-		return int64(n), err
+		return n, err
 	default:
 		return nil, fmt.Errorf("unknown UINTS_AND_STRS opcode: 0x%02X", opcode)
 	}
