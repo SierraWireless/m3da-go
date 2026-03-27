@@ -207,10 +207,10 @@ func TestBysantRoundTrip_Comprehensive(t *testing.T) {
 			name: "Response",
 			input: &M3daResponse{
 				TicketID: 12345,
-				Status:   200,
-				Message:  "OK",
+				Status:   0,
+				Message:  "",
 			},
-			expectedBytes: []byte{0x62, 0xe7, 0x0f, 0xad, 0xe0, 0x87, 0x05, 0x4f, 0x4b},
+			expectedBytes: []byte{0x62, 0xe7, 0x0f, 0xad, 0x62, 0x01},
 			context:       ContextGlobal,
 		},
 		{
