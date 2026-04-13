@@ -274,7 +274,7 @@ func (sm *securityManager) calculateHMAC(envelope *M3daEnvelope, salt []byte) ([
 	debugf("HMAC calculation:")
 	debugf("  HMAC Key: %x (%s)", hashKey, string(hashKey[:]))
 	debugf("    Client ID: %x (%s)", clientID, string(clientID))
-	debugf("    Password: %x (%s)", sm.config.Password, string(sm.config.Password))
+	// debugf("    Password: %x (%s)", sm.config.Password, string(sm.config.Password))
 	debugf("  HMAC Message")
 	debugf("    Body: %x (%d bytes)", envelope.Payload, len(envelope.Payload))
 	debugf("    Nonce (current): %x", salt)
