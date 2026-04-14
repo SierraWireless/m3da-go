@@ -239,7 +239,6 @@ func (sm *securityManager) calculateHMAC(envelope *M3daEnvelope, salt []byte) ([
 		// If no ID in envelope and we have a fallback ID, use it
 		if len(sm.config.ServerID) > 0 {
 			clientID = sm.config.ServerID
-			warnf("🔍 Using fallback ID for HMAC calculation: %s", clientID)
 		} else {
 			return nil, fmt.Errorf("no entity ID found in envelope header and no fallback ID provided")
 		}
@@ -269,15 +268,6 @@ func (sm *securityManager) calculateHMAC(envelope *M3daEnvelope, salt []byte) ([
 
 	// Write nonce from the envelope (the nonce we're sending in this message)
 	h.Write(salt)
-
-	// Debug logging
-	debugf("HMAC calculation:")
-	debugf("  HMAC Key: %x (%s)", hashKey, string(hashKey[:]))
-	debugf("    Client ID: %x (%s)", clientID, string(clientID))
-	debugf("    Password: %x (%s)", sm.config.Password, string(sm.config.Password))
-	debugf("  HMAC Message")
-	debugf("    Body: %x (%d bytes)", envelope.Payload, len(envelope.Payload))
-	debugf("    Nonce (current): %x", salt)
 
 	return h.Sum(nil), nil
 }
