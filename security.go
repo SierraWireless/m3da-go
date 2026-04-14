@@ -28,7 +28,6 @@ func newSecurityManager(config *SecurityConfig) (*securityManager, error) {
 	sm := &securityManager{
 		config: config,
 	}
-	debugf("Fallback server ID set to %s", sm.config.ServerID)
 
 	if sm.config.Password == "" {
 		return nil, fmt.Errorf("password is required for security")
@@ -66,7 +65,6 @@ func (sm *securityManager) generateNonce() ([]byte, error) {
 		return nil, fmt.Errorf("failed to generate nonce: %w", err)
 	}
 
-	debugf("Generated %d-byte nonce for %s: %x", nonceLength, sm.config.Authentication, nonce)
 	return nonce, nil
 }
 
@@ -88,7 +86,6 @@ func (sm *securityManager) extractAndUpdateNonces(envelope *M3daEnvelope) error 
 		// will be used to authenticate our next outgoing message
 		sm.nonce = receivedNonce
 
-		debugf("Extracted next nonce from envelope: %x", sm.nonce)
 		return nil
 	}
 
@@ -136,7 +133,6 @@ func (sm *securityManager) deriveCipherKey(keyLength int, clientID string) ([]by
 		cipherKey = cipherKey[:keyLength]
 	}
 
-	debugf("Derived cipher key (len=%d): %x", keyLength, cipherKey)
 	return cipherKey, nil
 }
 
@@ -151,7 +147,6 @@ func (sm *securityManager) deriveIV() ([]byte, error) {
 	hash := md5.Sum(sm.nonce)
 	iv := hash[:aes.BlockSize] // Take first 16 bytes for AES block size
 
-	debugf("Derived IV from nonce: %x", iv)
 	return iv, nil
 }
 
@@ -261,8 +256,6 @@ func (sm *securityManager) calculateHMAC(envelope *M3daEnvelope, salt []byte) ([
 		return nil, fmt.Errorf("unsupported HMAC type: %s", sm.config.Authentication)
 	}
 
-	debugf("Base key K = H_%s(): %x", sm.config.Authentication, hashKey)
-
 	// Write payload (body)
 	h.Write(envelope.Payload)
 
@@ -286,7 +279,6 @@ func (sm *securityManager) applySecurityToEnvelope(envelope *M3daEnvelope) (*M3d
 	if sm.nonce == nil {
 		// Use our envelope nonce for HMAC if no server nonce available
 		sm.nonce = sm.nextNonce
-		debugf("Bootstrap server Nonce recovery using random nonce: %x", sm.nonce)
 	}
 
 	// Step 1: Encode the original envelope (inner envelope) as payload for security envelope
@@ -295,8 +287,6 @@ func (sm *securityManager) applySecurityToEnvelope(envelope *M3daEnvelope) (*M3d
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode inner envelope: %w", err)
 	}
-
-	debugf("Encoded inner envelope (%d bytes) for security nesting", len(innerEnvelopeData))
 
 	// Step 2: Create security envelope (outer envelope) with inner envelope as payload
 	securityEnvelope := &M3daEnvelope{
@@ -321,7 +311,6 @@ func (sm *securityManager) applySecurityToEnvelope(envelope *M3daEnvelope) (*M3d
 			return nil, fmt.Errorf("failed to encrypt inner envelope payload: %w", err)
 		}
 		securityEnvelope.Payload = encryptedPayload
-		debugf("Encrypted inner envelope payload (%d bytes)", len(encryptedPayload))
 	}
 
 	// Step 4: Calculate HMAC for the security envelope
@@ -333,7 +322,6 @@ func (sm *securityManager) applySecurityToEnvelope(envelope *M3daEnvelope) (*M3d
 		}
 		// Add HMAC to footer
 		securityEnvelope.Footer[HeaderKeyMAC] = mac
-		debugf("Message HMAC: %x", mac)
 	}
 
 	// Step 5: Return the new security envelope
@@ -375,8 +363,6 @@ func (sm *securityManager) verifyEnvelopeSecurity(envelope *M3daEnvelope) error 
 		clientID = id
 	}
 
-	debugf("Verifying security for envelope with %d byte payload", len(envelope.Payload))
-
 	// Verify HMAC if present
 	if sm.config.Authentication != HMACTypeNone {
 		if macValue, exists := envelope.Footer[HeaderKeyMAC]; exists {
@@ -389,7 +375,6 @@ func (sm *securityManager) verifyEnvelopeSecurity(envelope *M3daEnvelope) error 
 				return fmt.Errorf("invalid MAC type in envelope footer: %T", macValue)
 			}
 
-			debugf("Nonce state: current=%x", sm.nonce)
 			// Calculate expected HMAC
 			expectedMAC, err := sm.calculateHMAC(envelope, sm.nonce)
 			if err != nil {
@@ -401,7 +386,6 @@ func (sm *securityManager) verifyEnvelopeSecurity(envelope *M3daEnvelope) error 
 				return fmt.Errorf("response HMAC verification failed, computed=%x, received=%x", expectedMAC, receivedMAC)
 			}
 
-			debugf("Response HMAC verification successful: %x", receivedMAC)
 		}
 	}
 
@@ -413,7 +397,6 @@ func (sm *securityManager) verifyEnvelopeSecurity(envelope *M3daEnvelope) error 
 		if err != nil {
 			return fmt.Errorf("failed to decrypt payload: %w", err)
 		}
-		debugf("Payload decrypted successfully (%d bytes)", len(decryptedPayload))
 	} else {
 		decryptedPayload = envelope.Payload
 	}
@@ -431,7 +414,7 @@ func (sm *securityManager) verifyEnvelopeSecurity(envelope *M3daEnvelope) error 
 			// Look for envelope in decoded messages
 			for _, msg := range messages {
 				if innerEnvelope, ok := msg.(*M3daEnvelope); ok {
-					infof("🔍 Successfully extracted inner envelope from nested structure")
+					debugf("Successfully extracted inner envelope from nested structure")
 					// Replace the outer envelope with the inner envelope contents
 					*envelope = *innerEnvelope
 					break
